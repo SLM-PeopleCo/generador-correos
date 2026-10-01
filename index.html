@@ -108,9 +108,15 @@
     box-shadow: 0 1px 3px rgba(60,64,67,.3);
   }
 
-  .download-btn:hover {
+  .download-btn:hover:not(:disabled) {
     background: #1557b0;
     box-shadow: 0 4px 8px rgba(60,64,67,.2);
+  }
+  
+  .download-btn:disabled {
+    background: #a8c7fa;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 
   /* Contenedor del Preview */
@@ -313,7 +319,7 @@
     color: #202124;
     padding-bottom: 34px;
     max-width: 900px;
-    white-space: pre-wrap; /* Respeta saltos de línea del textarea */
+    white-space: pre-wrap;
   }
   .body-text p { margin: 0 0 20px 0; }
 
@@ -343,20 +349,10 @@
     font-size: 17px;
   }
 
-  /* Responsive para pantallas pequeñas */
   @media (max-width: 900px) {
-    .app-container {
-      flex-direction: column;
-      height: auto;
-      overflow: auto;
-    }
-    .control-panel {
-      width: 100%;
-      height: auto;
-    }
-    .preview-container {
-      height: auto;
-    }
+    .app-container { flex-direction: column; height: auto; overflow: auto; }
+    .control-panel { width: 100%; height: auto; }
+    .preview-container { height: auto; }
   }
 </style>
 </head>
@@ -377,6 +373,11 @@
         <label for="input-email">Correo del Remitente</label>
         <input type="text" id="input-email" value="israel.lopez@fiscalesotman.com.mx">
       </div>
+      
+      <div class="form-group">
+        <label for="input-recipient">Nombre del Destinatario</label>
+        <input type="text" id="input-recipient" value="Myrna Aguilar">
+      </div>
 
       <div class="form-group">
         <label for="input-subject">Asunto del Correo</label>
@@ -395,8 +396,11 @@ Saludos cordiales.</textarea>
       </div>
 
       <div class="form-group">
-        <label for="input-time">Hora / Fecha</label>
-        <input type="text" id="input-time" value="vie, 8 sep 2023, 8:51 a. m.">
+        <label for="input-time">Hora / Fecha (Debe ser en horario hábil)</label>
+        <input type="datetime-local" id="input-time" value="2023-09-08T09:51">
+        <span id="time-warning" style="color: #d93025; font-size: 13px; font-weight: 500; display: none;">
+          Esta no es una fecha ni hora hábil. Asigna otra.
+        </span>
       </div>
 
       <button class="download-btn" id="download-btn">
@@ -437,7 +441,7 @@ Saludos cordiales.</textarea>
         <div class="layout">
           <div class="sidebar">
             <div class="compose-btn">✏️ Redactar</div>
-            <div class="nav-item active"><span class="nav-icon">📥</span> Recibidos <span class="count">18</span></div>
+            <div class="nav-item active"><span class="nav-icon">📥</span> Recibidos <span class="count" id="inbox-count"></span></div>
             <div class="nav-item"><span class="nav-icon">☆</span> Destacados</div>
             <div class="nav-item"><span class="nav-icon">🕐</span> Pospuestos</div>
             <div class="nav-item"><span class="nav-icon">➤</span> Enviados</div>
@@ -478,10 +482,10 @@ Saludos cordiales.</textarea>
                     <span class="sender-name" id="preview-name">Israel López</span>
                     <span class="sender-email" id="preview-email">&lt;israel.lopez@fiscalesotman.com.mx&gt;</span>
                   </div>
-                  <div class="to-line">para Myrna Aguilar ▾</div>
+                  <div class="to-line">para <span id="preview-recipient">Myrna Aguilar</span> ▾</div>
                 </div>
                 <div class="msg-header-right">
-                  <span id="preview-time">vie, 8 sep 2023, 8:51 a. m.</span>
+                  <span id="preview-time">vie, 8 sep 2023, 9:51 a. m.</span>
                   <span>☆</span>
                   <span>↩</span>
                   <span>⋮</span>
@@ -514,6 +518,7 @@ Saludos cordiales.</div>
     // Referencias a los elementos del formulario
     const inputName = document.getElementById('input-name');
     const inputEmail = document.getElementById('input-email');
+    const inputRecipient = document.getElementById('input-recipient');
     const inputSubject = document.getElementById('input-subject');
     const inputBody = document.getElementById('input-body');
     const inputTime = document.getElementById('input-time');
@@ -521,12 +526,23 @@ Saludos cordiales.</div>
     // Referencias a los elementos de la vista previa
     const previewName = document.getElementById('preview-name');
     const previewEmail = document.getElementById('preview-email');
+    const previewRecipient = document.getElementById('preview-recipient');
     const previewSubject = document.getElementById('preview-subject');
     const previewBody = document.getElementById('preview-body');
     const previewTime = document.getElementById('preview-time');
     const previewInitials = document.getElementById('preview-initials');
+    
+    // Referencias a alertas y botones
+    const timeWarning = document.getElementById('time-warning');
+    const downloadBtn = document.getElementById('download-btn');
+    const gmailMockup = document.getElementById('gmail-mockup');
+    const inboxCount = document.getElementById('inbox-count');
 
-    // Función para obtener iniciales del nombre
+    window.addEventListener('DOMContentLoaded', () => {
+      const randomCount = Math.floor(Math.random() * (450 - 15 + 1)) + 15;
+      inboxCount.textContent = randomCount;
+    });
+
     function getInitials(name) {
       if (!name) return 'GM';
       const parts = name.trim().split(' ');
@@ -536,7 +552,6 @@ Saludos cordiales.</div>
       return name.substring(0, 2).toUpperCase();
     }
 
-    // Actualización en tiempo real
     inputName.addEventListener('input', (e) => {
       const val = e.target.value;
       previewName.textContent = val;
@@ -548,6 +563,10 @@ Saludos cordiales.</div>
       previewEmail.textContent = `<${val}>`;
     });
 
+    inputRecipient.addEventListener('input', (e) => {
+      previewRecipient.textContent = e.target.value;
+    });
+
     inputSubject.addEventListener('input', (e) => {
       previewSubject.textContent = e.target.value;
     });
@@ -556,35 +575,110 @@ Saludos cordiales.</div>
       previewBody.textContent = e.target.value;
     });
 
+    function validarFechaHabil(fecha) {
+      const day = fecha.getDay(); 
+      if (day === 0 || day === 6) return false;
+      
+      const hours = fecha.getHours();
+      if (hours < 9 || hours >= 18) return false;
+      
+      const mm = String(fecha.getMonth() + 1).padStart(2, '0');
+      const dd = String(fecha.getDate()).padStart(2, '0');
+      const fechaCorta = `${mm}-${dd}`;
+      
+      const festivosOficiales = [
+        '01-01', '02-05', '03-21', '05-01', '09-16', '10-01', '11-20', '12-25'
+      ];
+
+      if (festivosOficiales.includes(fechaCorta)) return false;
+      
+      return true;
+    }
+
+    function formatearFechaGmail(fecha) {
+      const dias = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      
+      const nombreDia = dias[fecha.getDay()];
+      const numeroDia = fecha.getDate();
+      const nombreMes = meses[fecha.getMonth()];
+      const anio = fecha.getFullYear();
+      
+      let horas = fecha.getHours();
+      const minutos = String(fecha.getMinutes()).padStart(2, '0');
+      const ampm = horas >= 12 ? 'p. m.' : 'a. m.';
+      
+      horas = horas % 12;
+      horas = horas ? horas : 12; 
+      
+      return `${nombreDia}, ${numeroDia} ${nombreMes} ${anio}, ${horas}:${minutos} ${ampm}`;
+    }
+
     inputTime.addEventListener('input', (e) => {
-      previewTime.textContent = e.target.value;
+      const dateVal = new Date(e.target.value);
+      
+      if (isNaN(dateVal.getTime())) return; 
+
+      if (!validarFechaHabil(dateVal)) {
+        timeWarning.style.display = 'block';
+        downloadBtn.disabled = true;
+      } else {
+        timeWarning.style.display = 'none';
+        downloadBtn.disabled = false;
+        previewTime.textContent = formatearFechaGmail(dateVal);
+      }
     });
 
-    // Lógica para generar y descargar screenshot con html2canvas
-    const downloadBtn = document.getElementById('download-btn');
-    const gmailMockup = document.getElementById('gmail-mockup');
+    inputTime.dispatchEvent(new Event('input'));
 
     downloadBtn.addEventListener('click', () => {
+      if(downloadBtn.disabled) return;
+
       downloadBtn.textContent = "Generando imagen...";
       downloadBtn.disabled = true;
 
       html2canvas(gmailMockup, {
-        scale: 2, // Mejora la calidad y nitidez de la captura
+        scale: 2, 
+        width: 1090, // NUEVO: Forzar el tamaño exacto en la configuración del lienzo
+        windowWidth: 1090,
         useCORS: true,
-        logging: false
+        logging: false,
+        onclone: function(clonedDoc) {
+          // NUEVO: Obligar al body clonado a tener el espacio necesario para no aplastar el diseño
+          clonedDoc.body.style.width = '1090px';
+          clonedDoc.body.style.minWidth = '1090px';
+
+          const clonedMockup = clonedDoc.getElementById('gmail-mockup');
+          clonedMockup.style.width = '1090px';
+          clonedMockup.style.minWidth = '1090px'; // Evita que Flexbox comprima el contenedor
+          clonedMockup.style.maxWidth = '1090px';
+          clonedMockup.style.height = 'auto'; 
+          clonedMockup.style.maxHeight = 'none'; 
+          clonedMockup.style.margin = '0';
+          clonedMockup.style.borderRadius = '0'; 
+          clonedMockup.style.border = 'none';
+          clonedMockup.style.boxShadow = 'none';
+          
+          // NUEVO: Proteger las columnas laterales de la compresión de flexbox
+          const sidebar = clonedMockup.querySelector('.sidebar');
+          const main = clonedMockup.querySelector('.main');
+          if(sidebar) sidebar.style.flexShrink = '0';
+          if(main) main.style.flexShrink = '0';
+        }
       }).then(canvas => {
-        // Convertir canvas a URL de datos PNG
         const imageURL = canvas.toDataURL('image/png');
 
-        // Crear elemento enlace temporal para forzar la descarga
+        let rawSubject = inputSubject.value;
+        let safeName = rawSubject.replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim();
+        if (!safeName) safeName = 'mockup-gmail'; 
+
         const link = document.createElement('a');
         link.href = imageURL;
-        link.download = 'gmail-mockup.png';
+        link.download = safeName + '.png'; 
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
 
-        // Restaurar estado del botón
         downloadBtn.textContent = "📷 Generar y Descargar Screenshot";
         downloadBtn.disabled = false;
       }).catch(err => {
