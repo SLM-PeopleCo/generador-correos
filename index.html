@@ -476,7 +476,7 @@ Saludos cordiales.</textarea>
                 <span class="material-symbols-outlined">label</span>
                 <span class="material-symbols-outlined">more_vert</span>
               </div>
-              <div class="pager">1 de 6,721 <span class="material-symbols-outlined">chevron_left</span><span class="material-symbols-outlined">chevron_right</span></div>
+              <div class="pager">1 de <span id="total-count"></span> <span class="material-symbols-outlined">chevron_left</span><span class="material-symbols-outlined">chevron_right</span></div>
             </div>
 
             <div class="msg-wrap">
@@ -546,10 +546,16 @@ Saludos cordiales.</div>
     const downloadBtn = document.getElementById('download-btn');
     const gmailMockup = document.getElementById('gmail-mockup');
     const inboxCount = document.getElementById('inbox-count');
+    const totalCount = document.getElementById('total-count');
 
     window.addEventListener('DOMContentLoaded', () => {
-      const randomCount = Math.floor(Math.random() * (450 - 15 + 1)) + 15;
-      inboxCount.textContent = randomCount;
+      // Aleatorio para Recibidos (entre 15 y 450)
+      const randomInbox = Math.floor(Math.random() * (450 - 15 + 1)) + 15;
+      inboxCount.textContent = randomInbox;
+
+      // Aleatorio para Total de Correos (entre 1,000 y 25,000)
+      const randomTotal = Math.floor(Math.random() * (25000 - 1000 + 1)) + 1000;
+      totalCount.textContent = randomTotal.toLocaleString('en-US');
     });
 
     function getInitials(name) {
