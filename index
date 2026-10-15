@@ -67,7 +67,7 @@
   }
 
   .form-group input,
-  .form-group textarea {
+  .rich-textarea {
     padding: 12px 14px;
     border: 1px solid #dadce0;
     border-radius: 8px;
@@ -78,16 +78,18 @@
   }
 
   .form-group input:focus,
-  .form-group textarea:focus {
+  .rich-textarea:focus {
     outline: none;
     border-color: #1a73e8;
     background: #fff;
     box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
   }
 
-  .form-group textarea {
-    resize: vertical;
+  .rich-textarea {
     min-height: 120px;
+    overflow-y: auto;
+    line-height: 1.5;
+    white-space: pre-wrap;
   }
 
   .download-btn {
@@ -319,9 +321,9 @@
     color: #202124;
     padding-bottom: 34px;
     max-width: 900px;
-    white-space: pre-wrap;
   }
   .body-text p { margin: 0 0 20px 0; }
+  .body-text ul, .body-text ol { margin: 0 0 20px 0; padding-left: 20px; }
 
   .action-row {
     display: flex;
@@ -385,14 +387,8 @@
       </div>
 
       <div class="form-group">
-        <label for="input-body">Cuerpo del Mensaje</label>
-        <textarea id="input-body">Hola, Myrna:
-
-Espero que también estés teniendo una excelente semana.
-
-Se integra la información con el alcance, cualquier duda de la cotización quedo atento.
-
-Saludos cordiales.</textarea>
+        <label for="input-body">Cuerpo del Mensaje (Pega texto con formato)</label>
+        <div id="input-body" class="rich-textarea" contenteditable="true">Hola, Myrna:<br><br>Espero que también estés teniendo una excelente semana.<br><br>Se integra la información con el alcance, cualquier duda de la cotización quedo atento.<br><br>Saludos cordiales.</div>
       </div>
 
       <div class="form-group">
@@ -492,13 +488,7 @@ Saludos cordiales.</textarea>
                 </div>
               </div>
 
-              <div class="body-text" id="preview-body">Hola, Myrna:
-
-Espero que también estés teniendo una excelente semana.
-
-Se integra la información con el alcance, cualquier duda de la cotización quedo atento.
-
-Saludos cordiales.</div>
+              <div class="body-text" id="preview-body">Hola, Myrna:<br><br>Espero que también estés teniendo una excelente semana.<br><br>Se integra la información con el alcance, cualquier duda de la cotización quedo atento.<br><br>Saludos cordiales.</div>
 
               <div class="action-row">
                 <div class="action-btn">↩ Responder</div>
@@ -571,8 +561,33 @@ Saludos cordiales.</div>
       previewSubject.textContent = e.target.value;
     });
 
+    // NUEVO: Renderiza el HTML directamente desde el contenteditable
     inputBody.addEventListener('input', (e) => {
-      previewBody.textContent = e.target.value;
+      previewBody.innerHTML = e.target.innerHTML;
+    });
+
+    // NUEVO: Limpia estilos y colores de fondo al pegar desde Word o Gmail
+    inputBody.addEventListener('paste', (e) => {
+      e.preventDefault();
+      let pasteHtml = (e.clipboardData || window.clipboardData).getData('text/html');
+      let pasteText = (e.clipboardData || window.clipboardData).getData('text/plain');
+
+      if (pasteHtml) {
+        const doc = new DOMParser().parseFromString(pasteHtml, 'text/html');
+        const elements = doc.body.querySelectorAll('*');
+        elements.forEach(el => {
+          const allowedAttrs = ['href']; 
+          Array.from(el.attributes).forEach(attr => {
+            if (!allowedAttrs.includes(attr.name)) {
+              el.removeAttribute(attr.name);
+            }
+          });
+        });
+        document.execCommand('insertHTML', false, doc.body.innerHTML);
+      } else {
+        const textHtml = pasteText.replace(/\n/g, '<br>');
+        document.execCommand('insertHTML', false, textHtml);
+      }
     });
 
     function validarFechaHabil(fecha) {
@@ -639,18 +654,17 @@ Saludos cordiales.</div>
 
       html2canvas(gmailMockup, {
         scale: 2, 
-        width: 1090, // NUEVO: Forzar el tamaño exacto en la configuración del lienzo
+        width: 1090, 
         windowWidth: 1090,
         useCORS: true,
         logging: false,
         onclone: function(clonedDoc) {
-          // NUEVO: Obligar al body clonado a tener el espacio necesario para no aplastar el diseño
           clonedDoc.body.style.width = '1090px';
           clonedDoc.body.style.minWidth = '1090px';
 
           const clonedMockup = clonedDoc.getElementById('gmail-mockup');
           clonedMockup.style.width = '1090px';
-          clonedMockup.style.minWidth = '1090px'; // Evita que Flexbox comprima el contenedor
+          clonedMockup.style.minWidth = '1090px'; 
           clonedMockup.style.maxWidth = '1090px';
           clonedMockup.style.height = 'auto'; 
           clonedMockup.style.maxHeight = 'none'; 
@@ -659,7 +673,6 @@ Saludos cordiales.</div>
           clonedMockup.style.border = 'none';
           clonedMockup.style.boxShadow = 'none';
           
-          // NUEVO: Proteger las columnas laterales de la compresión de flexbox
           const sidebar = clonedMockup.querySelector('.sidebar');
           const main = clonedMockup.querySelector('.main');
           if(sidebar) sidebar.style.flexShrink = '0';
