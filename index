@@ -21,7 +21,7 @@
   .app-container { display: flex; flex: 1; height: 100vh; overflow: hidden; }
 
   .control-panel {
-    width: 420px; background: #ffffff; border-right: 1px solid #dadce0;
+    width: 450px; background: #ffffff; border-right: 1px solid #dadce0;
     padding: 24px; display: flex; flex-direction: column; gap: 20px;
     overflow-y: auto; box-shadow: 4px 0 15px rgba(0,0,0,0.05); z-index: 10;
   }
@@ -31,41 +31,40 @@
 
   .form-group { display: flex; flex-direction: column; gap: 6px; }
   .form-group label { font-size: 13px; font-weight: 600; color: #3c4043; }
-  .form-group input, .rich-textarea {
+  .form-group input {
     padding: 12px 14px; border: 1px solid #dadce0; border-radius: 8px;
     font-size: 14px; font-family: inherit; transition: all 0.2s; background: #f8f9fa;
   }
-  .form-group input:focus, .rich-textarea:focus {
-    outline: none; border-color: #1a73e8; background: #fff; box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+  
+  /* BARRA DE HERRAMIENTAS Y EDITOR */
+  .editor-container {
+    border: 1px solid #dadce0; border-radius: 8px; background: #f8f9fa;
+    display: flex; flex-direction: column; overflow: hidden;
   }
-
-  /* FORMATOS ENRIQUECIDOS Y CORRECCIÓN DE SALTOS DE LÍNEA */
+  .editor-toolbar {
+    display: flex; gap: 5px; padding: 8px; background: #e9eef6;
+    border-bottom: 1px solid #dadce0; flex-wrap: wrap;
+  }
+  .editor-toolbar button {
+    background: #ffffff; border: 1px solid #dadce0; border-radius: 4px;
+    padding: 6px 10px; cursor: pointer; font-size: 13px; font-weight: 500;
+    color: #3c4043; transition: background 0.2s;
+  }
+  .editor-toolbar button:hover { background: #d3e3fd; color: #001d35; }
+  
   .rich-textarea {
-    min-height: 250px; overflow-y: auto; outline: none;
-  }
-  
-  .rich-textarea, .body-text {
-    white-space: normal; /* Evita que se corten las frases a la mitad */
-    word-wrap: break-word;
-    line-height: 1.6;
+    min-height: 200px; padding: 14px; outline: none; background: #ffffff;
+    overflow-y: auto; font-family: inherit; font-size: 14px;
+    white-space: normal; line-height: 1.6;
   }
 
-  /* Forzar renderizado de Negritas, Cursivas y Listas */
-  .rich-textarea b, .rich-textarea strong, .body-text b, .body-text strong { font-weight: bold !important; }
-  .rich-textarea i, .rich-textarea em, .body-text i, .body-text em { font-style: italic !important; }
-  
-  .rich-textarea ul, .body-text ul {
-    display: block !important; list-style-type: disc !important;
-    margin: 12px 0 12px 24px !important; padding-left: 16px !important;
-  }
-  .rich-textarea ol, .body-text ol {
-    display: block !important; list-style-type: decimal !important;
-    margin: 12px 0 12px 24px !important; padding-left: 16px !important;
-  }
-  .rich-textarea li, .body-text li {
-    display: list-item !important; margin-bottom: 6px !important;
-  }
-  .rich-textarea p, .body-text p { margin: 0 0 12px 0 !important; }
+  /* FORZAR LISTAS Y ESTILOS */
+  .rich-textarea ul, .body-text ul { list-style-type: disc; margin: 10px 0 10px 24px; padding-left: 0; display: block; }
+  .rich-textarea ol, .body-text ol { list-style-type: decimal; margin: 10px 0 10px 24px; padding-left: 0; display: block; }
+  .rich-textarea li, .body-text li { margin-bottom: 6px; display: list-item; }
+  .rich-textarea b, .body-text b, .rich-textarea strong, .body-text strong { font-weight: bold; }
+  .rich-textarea i, .body-text i, .rich-textarea em, .body-text em { font-style: italic; }
+  .rich-textarea u, .body-text u { text-decoration: underline; }
 
   .download-btn {
     background: #1a73e8; color: white; border: none; border-radius: 28px;
@@ -130,16 +129,11 @@
   .to-line { font-size: 13px; color: #5f6368; margin-top: 4px; cursor: default; display: flex; align-items: center; gap: 6px; }
   .msg-header-right { display: flex; align-items: center; gap: 18px; color: #5f6368; font-size: 13.5px; flex-shrink: 0; margin-left: 12px; }
 
-  .body-text { color: #202124; padding-bottom: 34px; max-width: 900px; }
+  .body-text { color: #202124; padding-bottom: 34px; max-width: 900px; line-height: 1.6; }
   .action-row { display: flex; align-items: center; gap: 14px; padding: 4px 0 32px 0; }
   .action-btn { display: flex; align-items: center; gap: 10px; border: 1px solid #dadce0; border-radius: 22px; padding: 12px 22px; font-size: 14.5px; color: #3c4043; font-weight: 500; }
   .icon-circle-btn { width: 46px; height: 46px; border: 1px solid #dadce0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #5f6368; font-size: 17px; }
 
-  @media (max-width: 900px) {
-    .app-container { flex-direction: column; height: auto; overflow: auto; }
-    .control-panel { width: 100%; height: auto; }
-    .preview-container { height: auto; }
-  }
 </style>
 </head>
 <body>
@@ -165,10 +159,22 @@
         <label>Asunto del Correo</label>
         <input type="text" id="input-subject" value="COTIZACION // CONSULTORÍA EN EL DESARROLLO DE OBJETIVOS EMPRESARIALES">
       </div>
+      
+      <!-- NUEVO EDITOR CON BARRA DE HERRAMIENTAS -->
       <div class="form-group">
-        <label>Cuerpo del Mensaje (Pega tu texto aquí)</label>
-        <div id="input-body" class="rich-textarea" contenteditable="true">Pega aquí tu contenido con viñetas y negritas.</div>
+        <label>Cuerpo del Mensaje</label>
+        <div class="editor-container">
+          <div class="editor-toolbar">
+            <button type="button" onclick="formatText('bold')" title="Negrita"><b>B</b></button>
+            <button type="button" onclick="formatText('italic')" title="Cursiva"><i>I</i></button>
+            <button type="button" onclick="formatText('underline')" title="Subrayado"><u>U</u></button>
+            <button type="button" onclick="formatText('insertUnorderedList')" title="Viñetas">• Lista</button>
+            <button type="button" onclick="formatText('insertOrderedList')" title="Números">1. Lista</button>
+          </div>
+          <div id="input-body" class="rich-textarea" contenteditable="true">Pega aquí tu contenido y usa los botones de arriba para darle formato.</div>
+        </div>
       </div>
+
       <div class="form-group">
         <label>Hora / Fecha</label>
         <input type="datetime-local" id="input-time" value="2023-09-08T09:51">
@@ -219,7 +225,7 @@
               </div>
 
               <!-- El contenido renderizado se muestra aquí -->
-              <div class="body-text" id="preview-body"></div>
+              <div class="body-text" id="preview-body">Pega aquí tu contenido y usa los botones de arriba para darle formato.</div>
 
               <div class="action-row">
                 <div class="action-btn">↩ Responder</div>
@@ -265,26 +271,20 @@
     inputRecipient.addEventListener('input', (e) => previewRecipient.textContent = e.target.value);
     inputSubject.addEventListener('input', (e) => previewSubject.textContent = e.target.value);
 
-    // Mapeo en tiempo real del HTML
-    inputBody.addEventListener('input', (e) => {
-      previewBody.innerHTML = e.target.innerHTML;
-    });
+    // FUNCIÓN PARA APLICAR FORMATO CON BOTONES
+    function formatText(command) {
+      document.execCommand(command, false, null);
+      inputBody.focus();
+      updatePreview();
+    }
 
-    // Filtro de pegado para unificar saltos de línea sin destruir listas ni negritas
-    inputBody.addEventListener('paste', (e) => {
-      e.preventDefault();
-      const clipboardData = e.clipboardData || window.clipboardData;
-      let htmlData = clipboardData.getData('text/html');
-      
-      if (htmlData) {
-        document.execCommand('insertHTML', false, htmlData);
-      } else {
-        // Si pegan texto plano, lo convertimos a párrafos
-        let textData = clipboardData.getData('text/plain');
-        let formattedText = textData.split('\n').map(line => `<p>${line}</p>`).join('');
-        document.execCommand('insertHTML', false, formattedText);
-      }
-    });
+    // Actualizar vista previa
+    function updatePreview() {
+      previewBody.innerHTML = inputBody.innerHTML;
+    }
+
+    inputBody.addEventListener('input', updatePreview);
+    inputBody.addEventListener('keyup', updatePreview);
 
     function formatearFechaGmail(fecha) {
       const dias = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
