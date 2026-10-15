@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generador de Mockups de Gmail</title>
+<title>Generador de Mockups de Gmail - Texto Enriquecido</title>
 <!-- Importar html2canvas vía CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- Importar Google Material Symbols -->
@@ -75,8 +75,7 @@
     color: #3c4043;
   }
 
-  .form-group input,
-  .form-group textarea {
+  .form-group input, .rich-textarea {
     padding: 12px 14px;
     border: 1px solid #dadce0;
     border-radius: 8px;
@@ -86,18 +85,40 @@
     background: #f8f9fa;
   }
 
-  .form-group input:focus,
-  .form-group textarea:focus {
+  .form-group input:focus, .rich-textarea:focus {
     outline: none;
     border-color: #1a73e8;
     background: #fff;
     box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
   }
 
-  .form-group textarea {
-    resize: vertical;
-    min-height: 120px;
+  /* FORMATOS ENRIQUECIDOS Y CORRECCIÓN DE SALTOS DE LÍNEA */
+  .rich-textarea {
+    min-height: 200px; overflow-y: auto; outline: none;
   }
+  
+  .rich-textarea, .body-text {
+    white-space: normal; /* Evita el pre-wrap para que los divs y p fluyan natural */
+    word-wrap: break-word;
+    line-height: 1.6;
+  }
+
+  /* Forzar renderizado de Negritas, Cursivas y Listas */
+  .rich-textarea b, .rich-textarea strong, .body-text b, .body-text strong { font-weight: bold !important; }
+  .rich-textarea i, .rich-textarea em, .body-text i, .body-text em { font-style: italic !important; }
+  
+  .rich-textarea ul, .body-text ul {
+    display: block !important; list-style-type: disc !important;
+    margin: 12px 0 12px 24px !important; padding-left: 16px !important;
+  }
+  .rich-textarea ol, .body-text ol {
+    display: block !important; list-style-type: decimal !important;
+    margin: 12px 0 12px 24px !important; padding-left: 16px !important;
+  }
+  .rich-textarea li, .body-text li {
+    display: list-item !important; margin-bottom: 6px !important;
+  }
+  .rich-textarea p, .body-text p { margin: 0 0 12px 0 !important; }
 
   .download-btn {
     background: #1a73e8;
@@ -329,13 +350,10 @@
 
   .body-text {
     font-size: 14px;
-    line-height: 20px;
     color: #202124;
     padding-bottom: 34px;
     max-width: 900px;
-    white-space: pre-wrap;
   }
-  .body-text p { margin: 0 0 20px 0; }
 
   .action-row {
     display: flex;
@@ -391,14 +409,13 @@
       </div>
 
       <div class="form-group">
-        <label for="input-body">Cuerpo del Mensaje</label>
-        <textarea id="input-body">Hola, Myrna:
-
-Espero que también estés teniendo una excelente semana.
-
-Se integra la información con el alcance, cualquier duda de la cotización quedo atento.
-
-Saludos cordiales.</textarea>
+        <label for="input-body">Cuerpo del Mensaje (Pega tu texto aquí)</label>
+        <div id="input-body" class="rich-textarea" contenteditable="true">
+          <p>Hola, Myrna:</p>
+          <p>Espero que también estés teniendo una excelente semana.</p>
+          <p>Se integra la información con el alcance, cualquier duda de la cotización quedo atento.</p>
+          <p>Saludos cordiales.</p>
+        </div>
       </div>
 
       <div class="form-group">
@@ -506,13 +523,13 @@ Saludos cordiales.</textarea>
                 </div>
               </div>
 
-              <div class="body-text" id="preview-body">Hola, Myrna:
-
-Espero que también estés teniendo una excelente semana.
-
-Se integra la información con el alcance, cualquier duda de la cotización quedo atento.
-
-Saludos cordiales.</div>
+              <!-- CONTENEDOR ENRIQUECIDO -->
+              <div class="body-text" id="preview-body">
+                <p>Hola, Myrna:</p>
+                <p>Espero que también estés teniendo una excelente semana.</p>
+                <p>Se integra la información con el alcance, cualquier duda de la cotización quedo atento.</p>
+                <p>Saludos cordiales.</p>
+              </div>
 
               <div class="action-row">
                 <div class="action-btn"><span class="material-symbols-outlined">reply</span> Responder</div>
@@ -586,8 +603,25 @@ Saludos cordiales.</div>
       previewSubject.textContent = e.target.value;
     });
 
+    // Mapeo en tiempo real del HTML
     inputBody.addEventListener('input', (e) => {
-      previewBody.textContent = e.target.value;
+      previewBody.innerHTML = e.target.innerHTML;
+    });
+
+    // Filtro de pegado para unificar saltos de línea sin destruir listas ni negritas
+    inputBody.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const clipboardData = e.clipboardData || window.clipboardData;
+      let htmlData = clipboardData.getData('text/html');
+      
+      if (htmlData) {
+        document.execCommand('insertHTML', false, htmlData);
+      } else {
+        // Si pegan texto plano, lo convertimos a párrafos
+        let textData = clipboardData.getData('text/plain');
+        let formattedText = textData.split('\n').map(line => `<p>${line}</p>`).join('');
+        document.execCommand('insertHTML', false, formattedText);
+      }
     });
 
     function validarFechaHabil(fecha) {
