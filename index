@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Generador de Mockups de Gmail</title>
-<!-- Importar html2canvas vía CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   * { box-sizing: border-box; }
@@ -19,7 +18,6 @@
     min-height: 100vh;
   }
 
-  /* ===== Estructura Principal (Split View) ===== */
   .app-container {
     display: flex;
     flex: 1;
@@ -27,7 +25,6 @@
     overflow: hidden;
   }
 
-  /* Panel de Control (Formulario) */
   .control-panel {
     width: 420px;
     background: #ffffff;
@@ -85,11 +82,24 @@
     box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
   }
 
+  /* El área editable ahora respeta saltos de línea y listas */
   .rich-textarea {
-    min-height: 120px;
+    min-height: 200px;
     overflow-y: auto;
-    line-height: 1.5;
+    line-height: 1.6;
     white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  .rich-textarea ul, .rich-textarea ol,
+  .body-text ul, .body-text ol {
+    margin: 8px 0;
+    padding-left: 24px;
+  }
+
+  .rich-textarea b, .rich-textarea strong,
+  .body-text b, .body-text strong {
+    font-weight: 700;
   }
 
   .download-btn {
@@ -121,7 +131,6 @@
     box-shadow: none;
   }
 
-  /* Contenedor del Preview */
   .preview-container {
     flex: 1;
     overflow-y: auto;
@@ -132,7 +141,6 @@
     padding: 20px;
   }
 
-  /* Marco de la Plantilla de Gmail para exportar */
   .gmail-mockup {
     width: 100%;
     max-width: 1100px;
@@ -145,7 +153,6 @@
 
   a { text-decoration: none; color: inherit; }
 
-  /* ===== Top bar ===== */
   .topbar {
     display: flex;
     align-items: center;
@@ -156,200 +163,62 @@
     border-bottom: 1px solid #e1e3e6;
   }
   .menu-icon { font-size: 20px; color: #5f6368; margin-right: 4px; }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-  }
-  .logo-text {
-    font-size: 24px;
-    color: #3c4043;
-    font-weight: 500;
-    letter-spacing: -0.5px;
-  }
-  .search-bar {
-    flex: 1;
-    max-width: 760px;
-    display: flex;
-    align-items: center;
-    background: #e9eef6;
-    border-radius: 28px;
-    height: 52px;
-    padding: 0 20px;
-    color: #5f6368;
-    gap: 14px;
-  }
+  .logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .logo-text { font-size: 24px; color: #3c4043; font-weight: 500; letter-spacing: -0.5px; }
+  .search-bar { flex: 1; max-width: 760px; display: flex; align-items: center; background: #e9eef6; border-radius: 28px; height: 52px; padding: 0 20px; color: #5f6368; gap: 14px; }
   .search-bar span.placeholder { flex: 1; }
-  .search-bar svg { flex-shrink: 0; }
-  .topbar-right {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    color: #5f6368;
-    flex-shrink: 0;
-  }
-  .status-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid #dadce0;
-    border-radius: 20px;
-    padding: 8px 14px;
-    font-size: 14px;
-    color: #3c4043;
-  }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 20px; color: #5f6368; flex-shrink: 0; }
+  .status-pill { display: flex; align-items: center; gap: 8px; border: 1px solid #dadce0; border-radius: 20px; padding: 8px 14px; font-size: 14px; color: #3c4043; }
   .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #1e8e3e; }
-  .circle-icon {
-    width: 38px; height: 38px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    color: #5f6368; font-size: 16px;
-  }
-  .avatar-google {
-    width: 34px; height: 34px; border-radius: 50%;
-    background: #dbe1e8; color: #5f6368;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
+  .circle-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .avatar-google { width: 34px; height: 34px; border-radius: 50%; background: #dbe1e8; color: #5f6368; display: flex; align-items: center; justify-content: center; font-size: 18px; }
 
-  /* ===== Layout ===== */
   .layout { display: flex; }
-  .sidebar {
-    width: 270px;
-    flex-shrink: 0;
-    padding: 12px 8px 0 12px;
-  }
-  .compose-btn {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: #ffffff;
-    color: #3c4043;
-    border-radius: 22px;
-    padding: 16px 26px;
-    margin: 8px 0 20px 0;
-    font-weight: 500;
-    font-size: 15px;
-    width: fit-content;
-    box-shadow: 0 1px 3px rgba(60,64,67,.3), 0 4px 8px rgba(60,64,67,.15);
-  }
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding: 0 20px;
-    height: 34px;
-    border-radius: 0 18px 18px 0;
-    color: #3c4043;
-    font-size: 14.5px;
-    cursor: pointer;
-  }
+  .sidebar { width: 270px; flex-shrink: 0; padding: 12px 8px 0 12px; }
+  .compose-btn { display: flex; align-items: center; gap: 14px; background: #ffffff; color: #3c4043; border-radius: 22px; padding: 16px 26px; margin: 8px 0 20px 0; font-weight: 500; font-size: 15px; width: fit-content; box-shadow: 0 1px 3px rgba(60,64,67,.3), 0 4px 8px rgba(60,64,67,.15); }
+  .nav-item { display: flex; align-items: center; gap: 20px; padding: 0 20px; height: 34px; border-radius: 0 18px 18px 0; color: #3c4043; font-size: 14.5px; cursor: pointer; }
   .nav-item.active { background: #d3e3fd; color: #001d35; font-weight: 700; }
   .nav-item .count { margin-left: auto; font-weight: 400; font-size: 13px; color: #5f6368; }
   .nav-item.active .count { color: #001d35; font-weight: 700; }
   .nav-icon { width: 20px; text-align: center; color: #5f6368; flex-shrink: 0; }
   .nav-item.active .nav-icon { color: #001d35; }
-  .nav-section-label {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 20px; color: #3c4043; font-size: 14.5px; cursor: pointer;
-  }
+  .nav-section-label { display: flex; align-items: center; gap: 12px; padding: 10px 20px; color: #3c4043; font-size: 14.5px; cursor: pointer; }
 
-  .main {
-    flex: 1;
-    min-width: 0;
-    background: #ffffff;
-    border-top-left-radius: 16px;
-    border-left: 1px solid #e1e3e6;
-  }
-  .toolbar {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    padding: 12px 28px;
-    color: #5f6368;
-  }
+  .main { flex: 1; min-width: 0; background: #ffffff; border-top-left-radius: 16px; border-left: 1px solid #e1e3e6; }
+  .toolbar { display: flex; align-items: center; gap: 24px; padding: 12px 28px; color: #5f6368; }
   .toolbar-icons { display: flex; align-items: center; gap: 26px; font-size: 16px; }
   .pager { margin-left: auto; display: flex; align-items: center; gap: 16px; font-size: 13.5px; color: #5f6368; }
 
   .msg-wrap { padding: 4px 32px 8px 32px; }
-  .subject-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 10px 0 26px 0;
-  }
+  .subject-row { display: flex; align-items: center; gap: 14px; padding: 10px 0 26px 0; }
   .subject-line { font-size: 24px; font-weight: 700; color: #202124; }
-  .chip {
-    display: flex; align-items: center; gap: 6px;
-    background: #eef1f5; color: #3c4043; font-size: 13px;
-    border-radius: 14px; padding: 5px 12px;
-  }
+  .chip { display: flex; align-items: center; gap: 6px; background: #eef1f5; color: #3c4043; font-size: 13px; border-radius: 14px; padding: 5px 12px; }
   .subject-row-icons { margin-left: auto; display: flex; gap: 20px; color: #5f6368; font-size: 16px; }
 
-  .msg-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 4px 0 24px 0;
-  }
-  .avatar {
-    width: 44px; height: 44px; border-radius: 50%;
-    background: linear-gradient(135deg,#94a3b8,#334155);
-    color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 17px; font-weight: 600; flex-shrink: 0;
-  }
+  .msg-header { display: flex; align-items: flex-start; gap: 16px; padding: 4px 0 24px 0; }
+  .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg,#94a3b8,#334155); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; flex-shrink: 0; }
   .msg-header-main { flex: 1; min-width: 0; }
   .sender-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
   .sender-name { font-size: 15.5px; font-weight: 700; color: #202124; }
   .sender-email { font-size: 14px; color: #5f6368; }
   .to-line { font-size: 13px; color: #5f6368; margin-top: 4px; cursor: default; display: flex; align-items: center; gap: 6px; }
-  .msg-header-right {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    color: #5f6368;
-    font-size: 13.5px;
-    flex-shrink: 0;
-    margin-left: 12px;
-  }
+  .msg-header-right { display: flex; align-items: center; gap: 18px; color: #5f6368; font-size: 13.5px; flex-shrink: 0; margin-left: 12px; }
 
+  /* Aquí restauramos el espaciado correcto para la previsualización */
   .body-text {
     font-size: 15px;
-    line-height: 26px;
+    line-height: 1.6;
     color: #202124;
     padding-bottom: 34px;
     max-width: 900px;
+    white-space: pre-wrap; /* Mantiene saltos de línea de listados manuales */
+    word-wrap: break-word;
   }
-  .body-text p { margin: 0 0 20px 0; }
-  .body-text ul, .body-text ol { margin: 0 0 20px 0; padding-left: 20px; }
+  .body-text p { margin: 0 0 16px 0; }
 
-  .action-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 4px 0 32px 0;
-  }
-  .action-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid #dadce0;
-    border-radius: 22px;
-    padding: 12px 22px;
-    font-size: 14.5px;
-    color: #3c4043;
-    font-weight: 500;
-  }
-  .icon-circle-btn {
-    width: 46px; height: 46px;
-    border: 1px solid #dadce0;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    color: #5f6368;
-    font-size: 17px;
-  }
+  .action-row { display: flex; align-items: center; gap: 14px; padding: 4px 0 32px 0; }
+  .action-btn { display: flex; align-items: center; gap: 10px; border: 1px solid #dadce0; border-radius: 22px; padding: 12px 22px; font-size: 14.5px; color: #3c4043; font-weight: 500; }
+  .icon-circle-btn { width: 46px; height: 46px; border: 1px solid #dadce0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #5f6368; font-size: 17px; }
 
   @media (max-width: 900px) {
     .app-container { flex-direction: column; height: auto; overflow: auto; }
@@ -361,7 +230,6 @@
 <body>
 
   <div class="app-container">
-    <!-- Panel de Control (Formulario) -->
     <div class="control-panel">
       <h2>Generador Gmail</h2>
       <p class="subtitle">Personaliza los campos y descarga tu mockup en tiempo real.</p>
@@ -387,8 +255,14 @@
       </div>
 
       <div class="form-group">
-        <label for="input-body">Cuerpo del Mensaje (Pega texto con formato)</label>
-        <div id="input-body" class="rich-textarea" contenteditable="true">Hola, Myrna:<br><br>Espero que también estés teniendo una excelente semana.<br><br>Se integra la información con el alcance, cualquier duda de la cotización quedo atento.<br><br>Saludos cordiales.</div>
+        <label for="input-body">Cuerpo del Mensaje (Pega tu texto aquí)</label>
+        <div id="input-body" class="rich-textarea" contenteditable="true">Hola, Myrna:
+
+Espero que también estés teniendo una excelente semana.
+
+Se integra la información con el alcance, cualquier duda de la cotización quedo atento.
+
+Saludos cordiales.</div>
       </div>
 
       <div class="form-group">
@@ -404,7 +278,6 @@
       </button>
     </div>
 
-    <!-- Vista Previa (Plantilla de Gmail) -->
     <div class="preview-container">
       <div class="gmail-mockup" id="gmail-mockup">
         <div class="topbar">
@@ -488,7 +361,13 @@
                 </div>
               </div>
 
-              <div class="body-text" id="preview-body">Hola, Myrna:<br><br>Espero que también estés teniendo una excelente semana.<br><br>Se integra la información con el alcance, cualquier duda de la cotización quedo atento.<br><br>Saludos cordiales.</div>
+              <div class="body-text" id="preview-body">Hola, Myrna:
+
+Espero que también estés teniendo una excelente semana.
+
+Se integra la información con el alcance, cualquier duda de la cotización quedo atento.
+
+Saludos cordiales.</div>
 
               <div class="action-row">
                 <div class="action-btn">↩ Responder</div>
@@ -505,7 +384,6 @@
   </div>
 
   <script>
-    // Referencias a los elementos del formulario
     const inputName = document.getElementById('input-name');
     const inputEmail = document.getElementById('input-email');
     const inputRecipient = document.getElementById('input-recipient');
@@ -513,7 +391,6 @@
     const inputBody = document.getElementById('input-body');
     const inputTime = document.getElementById('input-time');
 
-    // Referencias a los elementos de la vista previa
     const previewName = document.getElementById('preview-name');
     const previewEmail = document.getElementById('preview-email');
     const previewRecipient = document.getElementById('preview-recipient');
@@ -522,7 +399,6 @@
     const previewTime = document.getElementById('preview-time');
     const previewInitials = document.getElementById('preview-initials');
     
-    // Referencias a alertas y botones
     const timeWarning = document.getElementById('time-warning');
     const downloadBtn = document.getElementById('download-btn');
     const gmailMockup = document.getElementById('gmail-mockup');
@@ -536,9 +412,7 @@
     function getInitials(name) {
       if (!name) return 'GM';
       const parts = name.trim().split(' ');
-      if (parts.length >= 2) {
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-      }
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
       return name.substring(0, 2).toUpperCase();
     }
 
@@ -549,8 +423,7 @@
     });
 
     inputEmail.addEventListener('input', (e) => {
-      const val = e.target.value;
-      previewEmail.textContent = `<${val}>`;
+      previewEmail.textContent = `<${e.target.value}>`;
     });
 
     inputRecipient.addEventListener('input', (e) => {
@@ -561,33 +434,9 @@
       previewSubject.textContent = e.target.value;
     });
 
-    // NUEVO: Renderiza el HTML directamente desde el contenteditable
+    // Mapea el HTML exacto incluyendo los estilos nativos copiados al preview
     inputBody.addEventListener('input', (e) => {
       previewBody.innerHTML = e.target.innerHTML;
-    });
-
-// NUEVO: Limpia estilos y colores de fondo al pegar desde Word o Gmail
-    inputBody.addEventListener('paste', (e) => {
-      e.preventDefault();
-      let pasteHtml = (e.clipboardData || window.clipboardData).getData('text/html');
-      let pasteText = (e.clipboardData || window.clipboardData).getData('text/plain');
-
-      if (pasteHtml) {
-        const doc = new DOMParser().parseFromString(pasteHtml, 'text/html');
-        const elements = doc.body.querySelectorAll('*');
-        elements.forEach(el => {
-          const allowedAttrs = ['href']; 
-          Array.from(el.attributes).forEach(attr => {
-            if (!allowedAttrs.includes(attr.name)) {
-              el.removeAttribute(attr.name);
-            }
-          });
-        });
-        document.execCommand('insertHTML', false, doc.body.innerHTML);
-      } else {
-        const textHtml = pasteText.replace(/\n/g, '<br>');
-        document.execCommand('insertHTML', false, textHtml);
-      }
     });
 
     function validarFechaHabil(fecha) {
@@ -600,13 +449,9 @@
       const mm = String(fecha.getMonth() + 1).padStart(2, '0');
       const dd = String(fecha.getDate()).padStart(2, '0');
       const fechaCorta = `${mm}-${dd}`;
-      
-      const festivosOficiales = [
-        '01-01', '02-05', '03-21', '05-01', '09-16', '10-01', '11-20', '12-25'
-      ];
+      const festivosOficiales = ['01-01', '02-05', '03-21', '05-01', '09-16', '10-01', '11-20', '12-25'];
 
       if (festivosOficiales.includes(fechaCorta)) return false;
-      
       return true;
     }
 
@@ -622,7 +467,6 @@
       let horas = fecha.getHours();
       const minutos = String(fecha.getMinutes()).padStart(2, '0');
       const ampm = horas >= 12 ? 'p. m.' : 'a. m.';
-      
       horas = horas % 12;
       horas = horas ? horas : 12; 
       
@@ -631,7 +475,6 @@
 
     inputTime.addEventListener('input', (e) => {
       const dateVal = new Date(e.target.value);
-      
       if (isNaN(dateVal.getTime())) return; 
 
       if (!validarFechaHabil(dateVal)) {
@@ -648,7 +491,6 @@
 
     downloadBtn.addEventListener('click', () => {
       if(downloadBtn.disabled) return;
-
       downloadBtn.textContent = "Generando imagen...";
       downloadBtn.disabled = true;
 
@@ -680,7 +522,6 @@
         }
       }).then(canvas => {
         const imageURL = canvas.toDataURL('image/png');
-
         let rawSubject = inputSubject.value;
         let safeName = rawSubject.replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim();
         if (!safeName) safeName = 'mockup-gmail'; 
