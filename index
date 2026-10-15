@@ -566,7 +566,7 @@
       previewBody.innerHTML = e.target.innerHTML;
     });
 
-    // NUEVO: Limpia estilos y colores de fondo al pegar desde Word o Gmail
+// NUEVO: Limpia estilos y colores de fondo al pegar desde Word o Gmail
     inputBody.addEventListener('paste', (e) => {
       e.preventDefault();
       let pasteHtml = (e.clipboardData || window.clipboardData).getData('text/html');
